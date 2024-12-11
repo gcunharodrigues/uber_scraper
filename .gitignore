@@ -1,0 +1,7 @@
+login_data.json
+places_key.json
+__pycache__/
+*.html
+*.mhtml
+*.csv
+gmaps_places.py
