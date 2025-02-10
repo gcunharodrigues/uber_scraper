@@ -209,8 +209,8 @@ def main():
 
     login(driver, otp, username, password)
 
-    start_date = datetime(2023, 11, 6)
-    num_weeks = 56
+    start_date = datetime(2024, 12, 1)
+    num_weeks = 9
     week_ranges = generate_week_ranges(start_date, num_weeks)
     hrefs = get_hrefs(driver, week_ranges)
     rides = scrape_data(hrefs, driver)
