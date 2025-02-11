@@ -5,3 +5,6 @@ __pycache__/
 *.mhtml
 *.csv
 gmaps_places.py
+old
+*.db
+*.log

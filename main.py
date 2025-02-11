@@ -13,6 +13,33 @@ import json
 import time
 import os
 import csv
+from db_manager import insert_batch_data
+import sqlite3
+from dateutil import parser
+
+
+def get_newest_date(database):
+    db = sqlite3.connect(database)
+    cursor = db.cursor()
+    cursor.execute("SELECT DISTINCT date FROM ride_data")
+    dates = cursor.fetchall()
+
+    dates_list = []
+    for date_str in dates:
+        if len(date_str[0]) == 0:
+            continue
+        else:
+            date = parser.parse(date_str[0]).strftime('%Y-%m-%d')
+            dates_list.append(date)
+
+    if dates_list:
+        dates_list.sort()  # Sorts in ascending order
+        newest_date = dates_list[-1]
+    else:
+        print("No dates found in the database.")
+
+    db.close()
+    return newest_date
 
 
 def login(driver, otp, username, password):
@@ -162,6 +189,18 @@ def scrape_data(hrefs, driver):
 
 
 def get_hrefs(driver, week_ranges, hrefs_all=[]):
+    """
+    Collect all hrefs from the given week ranges.
+
+    Given a chrome driver and a list of week ranges, this function will navigate
+    to each week, load all possible ride records, and return a list of all the
+    hrefs of the ride records.
+
+    :param driver: A chrome driver for navigating the web page.
+    :param week_ranges: A list of week ranges in the form of "YYYY-MM-DD,YYYY-MM-DD"
+    :param hrefs_all: An optional list to store the hrefs collected so far. Defaults to an empty list.
+    :return: A list of all the hrefs of the ride records
+    """
     time.sleep(5)  # Needs a better time handler
 
     for week in week_ranges:
@@ -209,17 +248,19 @@ def main():
 
     login(driver, otp, username, password)
 
-    start_date = datetime(2024, 12, 1)
-    num_weeks = 9
-    week_ranges = generate_week_ranges(start_date, num_weeks)
+    # start_date = datetime(2025, 2, 10)
+    start_date = get_newest_date('ride_data.db')
+    end_date = datetime(2025, 2, 10)
+    week_ranges = generate_week_ranges(start_date, end_date)
     hrefs = get_hrefs(driver, week_ranges)
     rides = scrape_data(hrefs, driver)
+    insert_batch_data('ride_data.db', rides)
 
     driver.quit()
 
-    with open(current_directory + '/output.csv', 'w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerows(rides)
+    # with open(current_directory + '/output_test.csv', 'w', newline='') as file:
+    #     writer = csv.writer(file)
+    #     writer.writerows(rides)
 
 
 if __name__ == "__main__":
